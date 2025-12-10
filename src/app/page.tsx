@@ -271,6 +271,13 @@ export default function Home() {
           couponsUsed={data.usage.couponsUsed}
         />
 
+        {/* Stats Cards */}
+        <StatsCards
+          b2c={data.b2c}
+          b2b={data.b2b}
+          usage={data.usage}
+        />
+
         {/* Progress Stats Section */}
         <div className="flex items-center justify-center gap-8 py-3 px-4 bg-gradient-to-r from-gray-900/50 via-gray-800/50 to-gray-900/50 rounded-xl border border-gray-700/30">
           <div className="text-center">
@@ -302,13 +309,6 @@ export default function Home() {
         {dailyHistory && dailyHistory.history.length > 0 && (
           <RevenueChart data={dailyHistory.history} />
         )}
-
-        {/* Stats Cards */}
-        <StatsCards
-          b2c={data.b2c}
-          b2b={data.b2b}
-          usage={data.usage}
-        />
 
         {/* Footer */}
         <div className="text-center text-gray-600 text-xs py-2">

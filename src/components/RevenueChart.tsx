@@ -232,17 +232,6 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                 activeDot={{ r: 4, fill: '#f97316' }}
               />
             )}
-
-            {activeMetrics.has('totalCumulative') && (
-              <Line
-                type="monotone"
-                dataKey="totalCumulative"
-                stroke="#a855f7"
-                strokeWidth={2}
-                dot={{ fill: '#a855f7', r: 2 }}
-                activeDot={{ r: 4, fill: '#a855f7' }}
-              />
-            )}
           </ComposedChart>
         </ResponsiveContainer>
       </div>

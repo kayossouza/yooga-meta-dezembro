@@ -185,9 +185,129 @@ export default function RocketScene({
 
         {/* Center: Rocket only (clean) */}
         <div className="relative flex-1 h-[320px] flex flex-col items-center justify-center">
-          {/* Launch pad */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-3 bg-gradient-to-r from-gray-700 via-gray-600 to-gray-700 rounded-t-lg z-10">
-            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-yellow-600 via-orange-500 to-yellow-600 animate-pulse" />
+          {/* Launch pad - Enhanced */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10">
+            {/* Base platform */}
+            <div className="relative w-32 h-4 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 rounded-t-lg border-t border-gray-600">
+              {/* Metal texture lines */}
+              <div className="absolute inset-0 flex justify-between px-2">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="w-px h-full bg-gray-600/50" />
+                ))}
+              </div>
+
+              {/* Energy line - animated glow */}
+              <motion.div
+                className="absolute inset-x-0 top-0 h-1 rounded-full overflow-hidden"
+                style={{
+                  background: checkpoint >= 3
+                    ? 'linear-gradient(90deg, transparent, #22d3ee, #3b82f6, #22d3ee, transparent)'
+                    : checkpoint >= 2
+                    ? 'linear-gradient(90deg, transparent, #f97316, #fbbf24, #f97316, transparent)'
+                    : 'linear-gradient(90deg, transparent, #fbbf24, #f59e0b, #fbbf24, transparent)',
+                }}
+                animate={{
+                  opacity: percentage > 0 ? [0.6, 1, 0.6] : 0.3,
+                  boxShadow: percentage > 0
+                    ? [
+                        `0 0 10px ${checkpoint >= 3 ? '#22d3ee' : '#f97316'}`,
+                        `0 0 25px ${checkpoint >= 3 ? '#22d3ee' : '#f97316'}`,
+                        `0 0 10px ${checkpoint >= 3 ? '#22d3ee' : '#f97316'}`,
+                      ]
+                    : '0 0 5px rgba(251,146,60,0.3)',
+                }}
+                transition={{
+                  duration: Math.max(0.3, 1 - checkpoint * 0.15),
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
+
+              {/* Running lights */}
+              <div className="absolute inset-x-2 top-0.5 flex justify-between">
+                {[...Array(6)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{
+                      backgroundColor: checkpoint >= 3 ? '#22d3ee' : '#f97316',
+                    }}
+                    animate={{
+                      opacity: percentage > 0 ? [0.3, 1, 0.3] : 0.2,
+                      scale: percentage > 0 ? [0.8, 1.2, 0.8] : 1,
+                    }}
+                    transition={{
+                      duration: 0.5,
+                      delay: i * 0.1,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Energy particles flowing along the pad */}
+              {percentage > 0 && (
+                <div className="absolute inset-0 overflow-hidden">
+                  {[...Array(4 + checkpoint * 2)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-1 h-1 rounded-full"
+                      style={{
+                        backgroundColor: checkpoint >= 3 ? '#22d3ee' : '#fbbf24',
+                        top: '25%',
+                      }}
+                      animate={{
+                        x: [-20, 140],
+                        opacity: [0, 1, 1, 0],
+                      }}
+                      transition={{
+                        duration: Math.max(0.8, 2 - checkpoint * 0.3),
+                        delay: i * (0.3 - checkpoint * 0.03),
+                        repeat: Infinity,
+                        ease: 'linear',
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Heat distortion effect above pad */}
+            {percentage > 10 && (
+              <motion.div
+                className="absolute -top-4 left-1/2 -translate-x-1/2 w-20 h-6 pointer-events-none"
+                style={{
+                  background: `radial-gradient(ellipse, ${checkpoint >= 3 ? 'rgba(34,211,238,0.15)' : 'rgba(251,146,60,0.15)'} 0%, transparent 70%)`,
+                }}
+                animate={{
+                  scaleY: [1, 1.3, 1],
+                  opacity: [0.3, 0.6, 0.3],
+                }}
+                transition={{
+                  duration: 0.5,
+                  repeat: Infinity,
+                }}
+              />
+            )}
+
+            {/* Side supports with lights */}
+            <div className="absolute -left-2 bottom-0 w-2 h-6 bg-gradient-to-b from-gray-600 to-gray-800 rounded-t">
+              <motion.div
+                className="absolute top-1 left-0.5 w-1 h-1 rounded-full"
+                style={{ backgroundColor: checkpoint >= 3 ? '#22d3ee' : '#f97316' }}
+                animate={{ opacity: percentage > 0 ? [0.5, 1, 0.5] : 0.3 }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+              />
+            </div>
+            <div className="absolute -right-2 bottom-0 w-2 h-6 bg-gradient-to-b from-gray-600 to-gray-800 rounded-t">
+              <motion.div
+                className="absolute top-1 left-0.5 w-1 h-1 rounded-full"
+                style={{ backgroundColor: checkpoint >= 3 ? '#22d3ee' : '#f97316' }}
+                animate={{ opacity: percentage > 0 ? [0.5, 1, 0.5] : 0.3 }}
+                transition={{ duration: 0.8, repeat: Infinity, delay: 0.4 }}
+              />
+            </div>
           </div>
 
           {/* Rocket */}
