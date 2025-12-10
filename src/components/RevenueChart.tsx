@@ -43,14 +43,13 @@ function formatDate(dateStr: string): string {
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
-type MetricKey = 'b2cCumulative' | 'b2bPurchasedCumulative' | 'b2bSpentCumulative' | 'b2bBalance' | 'totalCumulative';
+type MetricKey = 'b2cCumulative' | 'b2bPurchasedCumulative' | 'totalCumulative' | 'b2bSpentCumulative';
 
 const METRIC_CONFIG: Record<MetricKey, { label: string; fullLabel: string; color: string; bgColor: string; borderColor: string }> = {
-  b2cCumulative: { label: 'B2C', fullLabel: 'Venda de Cupons (B2C)', color: '#22d3ee', bgColor: 'bg-cyan-500/20', borderColor: 'border-cyan-500/50' },
-  b2bPurchasedCumulative: { label: 'Comprado', fullLabel: 'Cupons B2B Comprados', color: '#4ade80', bgColor: 'bg-green-500/20', borderColor: 'border-green-500/50' },
-  b2bSpentCumulative: { label: 'Descontos', fullLabel: 'Descontos Usados', color: '#f97316', bgColor: 'bg-orange-500/20', borderColor: 'border-orange-500/50' },
-  b2bBalance: { label: 'Saldo', fullLabel: 'Compra B2B - Descontos Usados', color: '#eab308', bgColor: 'bg-yellow-500/20', borderColor: 'border-yellow-500/50' },
-  totalCumulative: { label: 'Total', fullLabel: 'Receita Total', color: '#a855f7', bgColor: 'bg-purple-500/20', borderColor: 'border-purple-500/50' },
+  b2cCumulative: { label: 'B2C', fullLabel: 'B2C - Usuarios', color: '#22d3ee', bgColor: 'bg-cyan-500/20', borderColor: 'border-cyan-500/50' },
+  b2bPurchasedCumulative: { label: 'B2B', fullLabel: 'B2B - Restaurantes', color: '#4ade80', bgColor: 'bg-green-500/20', borderColor: 'border-green-500/50' },
+  totalCumulative: { label: 'Total', fullLabel: 'Total Vendido', color: '#a855f7', bgColor: 'bg-purple-500/20', borderColor: 'border-purple-500/50' },
+  b2bSpentCumulative: { label: 'Usados', fullLabel: 'Cupons Usados', color: '#f97316', bgColor: 'bg-orange-500/20', borderColor: 'border-orange-500/50' },
 };
 
 interface CustomTooltipProps {
@@ -68,11 +67,10 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || !label) return null;
 
   const labelMap: Record<string, string> = {
-    b2cCumulative: 'Venda de Cupons (B2C)',
-    b2bPurchasedCumulative: 'Cupons B2B Comprados',
-    b2bSpentCumulative: 'Descontos Usados',
-    b2bBalance: 'Compra B2B - Descontos',
-    totalCumulative: 'Receita Total',
+    b2cCumulative: 'B2C - Usuarios',
+    b2bPurchasedCumulative: 'B2B - Restaurantes',
+    totalCumulative: 'Total Vendido',
+    b2bSpentCumulative: 'Cupons Usados',
   };
 
   return (
@@ -98,7 +96,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 
 export default function RevenueChart({ data }: RevenueChartProps) {
   const [activeMetrics, setActiveMetrics] = useState<Set<MetricKey>>(
-    new Set(['b2cCumulative', 'b2bPurchasedCumulative', 'b2bSpentCumulative', 'b2bBalance'])
+    new Set(['b2cCumulative', 'b2bPurchasedCumulative', 'totalCumulative', 'b2bSpentCumulative'])
   );
 
   const toggleMetric = (metric: MetricKey) => {
@@ -235,18 +233,6 @@ export default function RevenueChart({ data }: RevenueChartProps) {
               />
             )}
 
-            {activeMetrics.has('b2bBalance') && (
-              <Line
-                type="monotone"
-                dataKey="b2bBalance"
-                stroke="#eab308"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={{ fill: '#eab308', r: 2 }}
-                activeDot={{ r: 4, fill: '#eab308' }}
-              />
-            )}
-
             {activeMetrics.has('totalCumulative') && (
               <Line
                 type="monotone"
@@ -266,33 +252,53 @@ export default function RevenueChart({ data }: RevenueChartProps) {
         {activeMetrics.has('b2cCumulative') && (
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-0.5 bg-cyan-400 rounded" />
-            <span className="text-gray-400">Venda Cupons</span>
+            <span className="text-gray-400">B2C - Usuarios</span>
           </div>
         )}
         {activeMetrics.has('b2bPurchasedCumulative') && (
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-0.5 bg-green-400 rounded" />
-            <span className="text-gray-400">B2B Comprado</span>
-          </div>
-        )}
-        {activeMetrics.has('b2bSpentCumulative') && (
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-0.5 bg-orange-400 rounded" />
-            <span className="text-gray-400">Descontos</span>
-          </div>
-        )}
-        {activeMetrics.has('b2bBalance') && (
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-0.5 bg-yellow-400 rounded border-dashed" />
-            <span className="text-gray-400">B2B - Descontos</span>
+            <span className="text-gray-400">B2B - Restaurantes</span>
           </div>
         )}
         {activeMetrics.has('totalCumulative') && (
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-0.5 bg-purple-400 rounded" />
-            <span className="text-gray-400">Receita Total</span>
+            <span className="text-gray-400">Total Vendido</span>
           </div>
         )}
+        {activeMetrics.has('b2bSpentCumulative') && (
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-0.5 bg-orange-400 rounded" />
+            <span className="text-gray-400">Cupons Usados</span>
+          </div>
+        )}
+      </div>
+
+      {/* Data Table */}
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-gray-700">
+              <th className="text-left text-gray-500 py-2 px-2">Data</th>
+              <th className="text-right text-cyan-400 py-2 px-2">B2C</th>
+              <th className="text-right text-green-400 py-2 px-2">B2B</th>
+              <th className="text-right text-purple-400 py-2 px-2">Total</th>
+              <th className="text-right text-orange-400 py-2 px-2">Usados</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row) => (
+              <tr key={row.date} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                <td className="text-gray-400 py-1.5 px-2">{formatDate(row.date)}</td>
+                <td className="text-right text-gray-300 py-1.5 px-2">{formatFullCurrency(row.b2cCumulative)}</td>
+                <td className="text-right text-gray-300 py-1.5 px-2">{formatFullCurrency(row.b2bPurchasedCumulative)}</td>
+                <td className="text-right text-gray-300 py-1.5 px-2">{formatFullCurrency(row.totalCumulative)}</td>
+                <td className="text-right text-gray-300 py-1.5 px-2">{formatFullCurrency(row.b2bSpentCumulative)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </motion.div>
   );
