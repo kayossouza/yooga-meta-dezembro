@@ -48,8 +48,8 @@ type MetricKey = 'b2cCumulative' | 'b2bPurchasedCumulative' | 'b2bSpentCumulativ
 const METRIC_CONFIG: Record<MetricKey, { label: string; fullLabel: string; color: string; bgColor: string; borderColor: string }> = {
   b2cCumulative: { label: 'B2C', fullLabel: 'Venda de Cupons (B2C)', color: '#22d3ee', bgColor: 'bg-cyan-500/20', borderColor: 'border-cyan-500/50' },
   b2bPurchasedCumulative: { label: 'Comprado', fullLabel: 'Cupons B2B Comprados', color: '#4ade80', bgColor: 'bg-green-500/20', borderColor: 'border-green-500/50' },
-  b2bSpentCumulative: { label: 'Gasto', fullLabel: 'Cupons B2B Gastos', color: '#f97316', bgColor: 'bg-orange-500/20', borderColor: 'border-orange-500/50' },
-  b2bBalance: { label: 'Saldo', fullLabel: 'Saldo B2B (Comprado - Gasto)', color: '#eab308', bgColor: 'bg-yellow-500/20', borderColor: 'border-yellow-500/50' },
+  b2bSpentCumulative: { label: 'Descontos', fullLabel: 'Descontos Usados', color: '#f97316', bgColor: 'bg-orange-500/20', borderColor: 'border-orange-500/50' },
+  b2bBalance: { label: 'Saldo', fullLabel: 'Compra B2B - Descontos Usados', color: '#eab308', bgColor: 'bg-yellow-500/20', borderColor: 'border-yellow-500/50' },
   totalCumulative: { label: 'Total', fullLabel: 'Receita Total', color: '#a855f7', bgColor: 'bg-purple-500/20', borderColor: 'border-purple-500/50' },
 };
 
@@ -70,8 +70,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   const labelMap: Record<string, string> = {
     b2cCumulative: 'Venda de Cupons (B2C)',
     b2bPurchasedCumulative: 'Cupons B2B Comprados',
-    b2bSpentCumulative: 'Cupons B2B Gastos',
-    b2bBalance: 'Saldo B2B',
+    b2bSpentCumulative: 'Descontos Usados',
+    b2bBalance: 'Compra B2B - Descontos',
     totalCumulative: 'Receita Total',
   };
 
@@ -278,13 +278,13 @@ export default function RevenueChart({ data }: RevenueChartProps) {
         {activeMetrics.has('b2bSpentCumulative') && (
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-0.5 bg-orange-400 rounded" />
-            <span className="text-gray-400">B2B Gasto</span>
+            <span className="text-gray-400">Descontos</span>
           </div>
         )}
         {activeMetrics.has('b2bBalance') && (
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-0.5 bg-yellow-400 rounded border-dashed" />
-            <span className="text-gray-400">Saldo B2B</span>
+            <span className="text-gray-400">B2B - Descontos</span>
           </div>
         )}
         {activeMetrics.has('totalCumulative') && (
