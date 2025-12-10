@@ -68,23 +68,30 @@ function generateMockDailyHistory(): DailyHistoryResponse {
   const startDate = new Date(2025, 11, 1); // December 1, 2025
   const history: DailyHistoryResponse['history'] = [];
   let b2cCumulative = 0;
-  let b2bCumulative = 0;
+  let b2bPurchasedCumulative = 0;
+  let b2bSpentCumulative = 0;
 
   const currentDate = new Date(startDate);
   while (currentDate <= today && currentDate.getMonth() === 11) {
     const b2cDaily = Math.floor(Math.random() * 20000) + 5000; // 5k-25k per day
-    const b2bDaily = Math.floor(Math.random() * 8000) + 2000; // 2k-10k per day
+    const b2bPurchasedDaily = Math.floor(Math.random() * 8000) + 2000; // 2k-10k per day
+    const b2bSpentDaily = Math.floor(Math.random() * 5000) + 1000; // 1k-6k per day (gasto)
+
     b2cCumulative += b2cDaily;
-    b2bCumulative += b2bDaily;
+    b2bPurchasedCumulative += b2bPurchasedDaily;
+    b2bSpentCumulative += b2bSpentDaily;
 
     history.push({
       date: currentDate.toISOString().split('T')[0],
       b2cDaily,
       b2cCumulative,
-      b2bDaily,
-      b2bCumulative,
-      totalDaily: b2cDaily + b2bDaily,
-      totalCumulative: b2cCumulative + b2bCumulative,
+      b2bPurchasedDaily,
+      b2bPurchasedCumulative,
+      b2bSpentDaily,
+      b2bSpentCumulative,
+      b2bBalance: b2bPurchasedCumulative - b2bSpentCumulative,
+      totalDaily: b2cDaily + b2bPurchasedDaily,
+      totalCumulative: b2cCumulative + b2bPurchasedCumulative,
     });
 
     currentDate.setDate(currentDate.getDate() + 1);

@@ -75,8 +75,11 @@ export const DailyDataPointSchema = z.object({
   date: z.string(),
   b2cDaily: z.number(),
   b2cCumulative: z.number(),
-  b2bDaily: z.number(),
-  b2bCumulative: z.number(),
+  b2bPurchasedDaily: z.number(),
+  b2bPurchasedCumulative: z.number(),
+  b2bSpentDaily: z.number(),
+  b2bSpentCumulative: z.number(),
+  b2bBalance: z.number(),
   totalDaily: z.number(),
   totalCumulative: z.number(),
 });
