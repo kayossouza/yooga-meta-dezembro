@@ -46,10 +46,10 @@ function formatDate(dateStr: string): string {
 
 type MetricKey = 'b2cCumulative' | 'b2bCumulative' | 'totalCumulative';
 
-const METRIC_CONFIG: Record<MetricKey, { label: string; color: string; bgColor: string; borderColor: string }> = {
-  b2cCumulative: { label: 'B2C', color: '#22d3ee', bgColor: 'bg-cyan-500/20', borderColor: 'border-cyan-500/50' },
-  b2bCumulative: { label: 'B2B', color: '#4ade80', bgColor: 'bg-green-500/20', borderColor: 'border-green-500/50' },
-  totalCumulative: { label: 'Total', color: '#a855f7', bgColor: 'bg-purple-500/20', borderColor: 'border-purple-500/50' },
+const METRIC_CONFIG: Record<MetricKey, { label: string; fullLabel: string; color: string; bgColor: string; borderColor: string }> = {
+  b2cCumulative: { label: 'Cupons', fullLabel: 'Venda de Cupons', color: '#22d3ee', bgColor: 'bg-cyan-500/20', borderColor: 'border-cyan-500/50' },
+  b2bCumulative: { label: 'Pedidos', fullLabel: 'Pedidos Restaurantes', color: '#4ade80', bgColor: 'bg-green-500/20', borderColor: 'border-green-500/50' },
+  totalCumulative: { label: 'Total', fullLabel: 'Receita Total', color: '#a855f7', bgColor: 'bg-purple-500/20', borderColor: 'border-purple-500/50' },
 };
 
 interface CustomTooltipProps {
@@ -67,9 +67,9 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || !label) return null;
 
   const labelMap: Record<string, string> = {
-    b2cCumulative: 'B2C Acumulado',
-    b2bCumulative: 'B2B Acumulado',
-    totalCumulative: 'Total Acumulado',
+    b2cCumulative: 'Venda de Cupons',
+    b2bCumulative: 'Pedidos Restaurantes',
+    totalCumulative: 'Receita Total',
   };
 
   return (
@@ -132,10 +132,10 @@ export default function RevenueChart({ data }: RevenueChartProps) {
             <TrendingUp className="w-5 h-5 text-purple-400" />
           </div>
           <div>
-            <h3 className="text-white font-semibold">Receita Acumulada</h3>
+            <h3 className="text-white font-semibold">Evolução da Receita</h3>
             <p className="text-gray-500 text-xs flex items-center gap-1">
               <Calendar className="w-3 h-3" />
-              Dezembro 2025
+              Acumulado Dezembro 2025
             </p>
           </div>
         </div>
@@ -238,19 +238,19 @@ export default function RevenueChart({ data }: RevenueChartProps) {
         {activeMetrics.has('b2cCumulative') && (
           <div className="flex items-center gap-2">
             <div className="w-3 h-0.5 bg-cyan-400 rounded" />
-            <span className="text-gray-400">B2C</span>
+            <span className="text-gray-400">Venda de Cupons</span>
           </div>
         )}
         {activeMetrics.has('b2bCumulative') && (
           <div className="flex items-center gap-2">
             <div className="w-3 h-0.5 bg-green-400 rounded" />
-            <span className="text-gray-400">B2B</span>
+            <span className="text-gray-400">Pedidos Restaurantes</span>
           </div>
         )}
         {activeMetrics.has('totalCumulative') && (
           <div className="flex items-center gap-2">
             <div className="w-3 h-0.5 bg-purple-400 rounded" />
-            <span className="text-gray-400">Total</span>
+            <span className="text-gray-400">Receita Total</span>
           </div>
         )}
       </div>
