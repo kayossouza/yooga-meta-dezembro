@@ -1,0 +1,259 @@
+'use client';
+
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Area,
+  ComposedChart,
+} from 'recharts';
+import { TrendingUp, Calendar } from 'lucide-react';
+import type { DailyDataPoint } from '@/types';
+
+interface RevenueChartProps {
+  data: DailyDataPoint[];
+}
+
+function formatCurrency(value: number): string {
+  if (value >= 1000) {
+    return `R$ ${(value / 1000).toFixed(0)}k`;
+  }
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 0,
+  }).format(value);
+}
+
+function formatFullCurrency(value: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 0,
+  }).format(value);
+}
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr + 'T00:00:00');
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+
+type MetricKey = 'b2cCumulative' | 'b2bCumulative' | 'totalCumulative';
+
+const METRIC_CONFIG: Record<MetricKey, { label: string; color: string; bgColor: string; borderColor: string }> = {
+  b2cCumulative: { label: 'B2C', color: '#22d3ee', bgColor: 'bg-cyan-500/20', borderColor: 'border-cyan-500/50' },
+  b2bCumulative: { label: 'B2B', color: '#4ade80', bgColor: 'bg-green-500/20', borderColor: 'border-green-500/50' },
+  totalCumulative: { label: 'Total', color: '#a855f7', bgColor: 'bg-purple-500/20', borderColor: 'border-purple-500/50' },
+};
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    color: string;
+    dataKey: string;
+  }>;
+  label?: string;
+}
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (!active || !payload || !label) return null;
+
+  const labelMap: Record<string, string> = {
+    b2cCumulative: 'B2C Acumulado',
+    b2bCumulative: 'B2B Acumulado',
+    totalCumulative: 'Total Acumulado',
+  };
+
+  return (
+    <div className="bg-gray-900/95 border border-gray-700 rounded-lg p-3 shadow-xl">
+      <p className="text-gray-400 text-xs mb-2">{formatDate(label)}</p>
+      {payload.map((entry) => (
+        <div key={entry.dataKey} className="flex items-center gap-2">
+          <div
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-gray-300 text-sm">
+            {labelMap[entry.dataKey] || entry.name}:
+          </span>
+          <span className="text-white font-bold text-sm">
+            {formatFullCurrency(entry.value)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function RevenueChart({ data }: RevenueChartProps) {
+  const [activeMetrics, setActiveMetrics] = useState<Set<MetricKey>>(
+    new Set(['b2cCumulative', 'b2bCumulative', 'totalCumulative'])
+  );
+
+  const toggleMetric = (metric: MetricKey) => {
+    const newSet = new Set(activeMetrics);
+    if (newSet.has(metric)) {
+      if (newSet.size > 1) newSet.delete(metric); // Manter pelo menos 1 ativo
+    } else {
+      newSet.add(metric);
+    }
+    setActiveMetrics(newSet);
+  };
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-gray-900/50 border border-gray-700/50 rounded-xl p-6 text-center">
+        <p className="text-gray-500">Sem dados de historico disponiveis</p>
+      </div>
+    );
+  }
+
+  const maxValue = Math.max(...data.map((d) => d.totalCumulative));
+
+  return (
+    <motion.div
+      className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-purple-500/10 rounded-lg">
+            <TrendingUp className="w-5 h-5 text-purple-400" />
+          </div>
+          <div>
+            <h3 className="text-white font-semibold">Receita Acumulada</h3>
+            <p className="text-gray-500 text-xs flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              Dezembro 2025
+            </p>
+          </div>
+        </div>
+
+        {/* Toggle buttons */}
+        <div className="flex gap-2">
+          {(Object.entries(METRIC_CONFIG) as [MetricKey, typeof METRIC_CONFIG[MetricKey]][]).map(([key, config]) => (
+            <button
+              key={key}
+              onClick={() => toggleMetric(key)}
+              className={`px-3 py-1.5 text-xs rounded-lg transition-all ${
+                activeMetrics.has(key)
+                  ? `${config.bgColor} border ${config.borderColor}`
+                  : 'bg-gray-800 text-gray-500 border border-gray-700'
+              }`}
+              style={{ color: activeMetrics.has(key) ? config.color : undefined }}
+            >
+              {config.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className="h-[250px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+            <defs>
+              <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.5} />
+            <XAxis
+              dataKey="date"
+              tickFormatter={formatDate}
+              stroke="#6b7280"
+              tick={{ fill: '#9ca3af', fontSize: 11 }}
+              axisLine={{ stroke: '#374151' }}
+            />
+            <YAxis
+              tickFormatter={formatCurrency}
+              stroke="#6b7280"
+              tick={{ fill: '#9ca3af', fontSize: 11 }}
+              axisLine={{ stroke: '#374151' }}
+              domain={[0, maxValue * 1.1]}
+            />
+            <Tooltip content={<CustomTooltip />} />
+
+            {activeMetrics.has('totalCumulative') && (
+              <Area
+                type="monotone"
+                dataKey="totalCumulative"
+                stroke="#a855f7"
+                strokeWidth={2}
+                fill="url(#colorTotal)"
+                dot={false}
+              />
+            )}
+
+            {activeMetrics.has('b2cCumulative') && (
+              <Line
+                type="monotone"
+                dataKey="b2cCumulative"
+                stroke="#22d3ee"
+                strokeWidth={2}
+                dot={{ fill: '#22d3ee', r: 2 }}
+                activeDot={{ r: 4, fill: '#22d3ee' }}
+              />
+            )}
+
+            {activeMetrics.has('b2bCumulative') && (
+              <Line
+                type="monotone"
+                dataKey="b2bCumulative"
+                stroke="#4ade80"
+                strokeWidth={2}
+                dot={{ fill: '#4ade80', r: 2 }}
+                activeDot={{ r: 4, fill: '#4ade80' }}
+              />
+            )}
+
+            {activeMetrics.has('totalCumulative') && (
+              <Line
+                type="monotone"
+                dataKey="totalCumulative"
+                stroke="#a855f7"
+                strokeWidth={2}
+                dot={{ fill: '#a855f7', r: 2 }}
+                activeDot={{ r: 4, fill: '#a855f7' }}
+              />
+            )}
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center justify-center gap-6 mt-3 text-xs">
+        {activeMetrics.has('b2cCumulative') && (
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-0.5 bg-cyan-400 rounded" />
+            <span className="text-gray-400">B2C</span>
+          </div>
+        )}
+        {activeMetrics.has('b2bCumulative') && (
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-0.5 bg-green-400 rounded" />
+            <span className="text-gray-400">B2B</span>
+          </div>
+        )}
+        {activeMetrics.has('totalCumulative') && (
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-0.5 bg-purple-400 rounded" />
+            <span className="text-gray-400">Total</span>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}

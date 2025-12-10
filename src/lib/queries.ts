@@ -1,7 +1,7 @@
-import type { MetricsResponse } from '@/types';
+import type { MetricsResponse, DailyHistoryResponse } from '@/types';
 
 const GOAL = 400000; // R$ 400.000,00
-const API_URL = process.env.NEST_DELIVERY_API_URL || 'https://delivery2.yooga.com.br';
+const API_URL = process.env.NEST_DELIVERY_API_URL || 'https://delivery.yooga.com.br';
 
 // Check at runtime if we should use mock data
 function useMockData(): boolean {
@@ -44,7 +44,7 @@ export async function getMetricsFromAPI(): Promise<MetricsResponse> {
   }
 
   try {
-    const response = await fetch(`${API_URL}/boost/meta-dashboard`, {
+    const response = await fetch(`${API_URL}/boost-dashboard`, {
       next: { revalidate: 0 },
       cache: 'no-store',
     });
@@ -59,6 +59,71 @@ export async function getMetricsFromAPI(): Promise<MetricsResponse> {
   } catch (error) {
     console.error('Failed to fetch from API, using mock data:', error);
     return mockMetrics;
+  }
+}
+
+// Mock daily history for development
+function generateMockDailyHistory(): DailyHistoryResponse {
+  const today = new Date();
+  const startDate = new Date(2025, 11, 1); // December 1, 2025
+  const history: DailyHistoryResponse['history'] = [];
+  let b2cCumulative = 0;
+  let b2bCumulative = 0;
+
+  const currentDate = new Date(startDate);
+  while (currentDate <= today && currentDate.getMonth() === 11) {
+    const b2cDaily = Math.floor(Math.random() * 20000) + 5000; // 5k-25k per day
+    const b2bDaily = Math.floor(Math.random() * 8000) + 2000; // 2k-10k per day
+    b2cCumulative += b2cDaily;
+    b2bCumulative += b2bDaily;
+
+    history.push({
+      date: currentDate.toISOString().split('T')[0],
+      b2cDaily,
+      b2cCumulative,
+      b2bDaily,
+      b2bCumulative,
+      totalDaily: b2cDaily + b2bDaily,
+      totalCumulative: b2cCumulative + b2bCumulative,
+    });
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return {
+    history,
+    period: {
+      start: '2025-12-01',
+      end: today.toISOString().split('T')[0],
+    },
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+const mockDailyHistory = generateMockDailyHistory();
+
+export async function getDailyHistoryFromAPI(): Promise<DailyHistoryResponse> {
+  if (useMockData()) {
+    console.log('Using mock daily history data');
+    return mockDailyHistory;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/boost-dashboard/daily-history`, {
+      next: { revalidate: 0 },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      console.error('API Error:', response.status, response.statusText);
+      throw new Error(`API returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data as DailyHistoryResponse;
+  } catch (error) {
+    console.error('Failed to fetch daily history, using mock:', error);
+    return mockDailyHistory;
   }
 }
 
