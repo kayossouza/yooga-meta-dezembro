@@ -70,6 +70,31 @@ export const MetricsResponseSchema = z.object({
   updatedAt: z.string(),
 });
 
+// Daily History (histórico diário de receita)
+export const DailyDataPointSchema = z.object({
+  date: z.string(),
+  b2cDaily: z.number(),
+  b2cCumulative: z.number(),
+  b2bPurchasedDaily: z.number(),
+  b2bPurchasedCumulative: z.number(),
+  b2bSpentDaily: z.number(),
+  b2bSpentCumulative: z.number(),
+  b2bBalance: z.number(),
+  totalDaily: z.number(),
+  totalCumulative: z.number(),
+});
+
+export const PeriodSchema = z.object({
+  start: z.string(),
+  end: z.string(),
+});
+
+export const DailyHistoryResponseSchema = z.object({
+  history: z.array(DailyDataPointSchema),
+  period: PeriodSchema,
+  updatedAt: z.string(),
+});
+
 // TypeScript Types
 export type TransactionStatus = z.infer<typeof TransactionStatusSchema>;
 export type Transaction = z.infer<typeof TransactionSchema>;
@@ -80,3 +105,6 @@ export type CombinedMetrics = z.infer<typeof CombinedMetricsSchema>;
 export type Progress = z.infer<typeof ProgressSchema>;
 export type Summary = z.infer<typeof SummarySchema>;
 export type MetricsResponse = z.infer<typeof MetricsResponseSchema>;
+export type DailyDataPoint = z.infer<typeof DailyDataPointSchema>;
+export type Period = z.infer<typeof PeriodSchema>;
+export type DailyHistoryResponse = z.infer<typeof DailyHistoryResponseSchema>;

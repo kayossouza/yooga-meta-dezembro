@@ -1,71 +1,18 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { RefreshCw, Settings } from 'lucide-react';
 import RocketScene from '@/components/RocketScene';
 import StatsCards from '@/components/StatsCards';
-import CouponTable from '@/components/CouponTable';
-import type { MetricsResponse, Transaction } from '@/types';
+import RevenueChart from '@/components/RevenueChart';
+import type { MetricsResponse, DailyHistoryResponse } from '@/types';
 
-const REFRESH_INTERVAL = 30000; // 30 seconds
-
-// Mock transactions for display (until API returns real data)
-const mockTransactions: Transaction[] = [
-  {
-    id: 1,
-    key: 'a1b2c3d4',
-    userName: 'Maria Silva',
-    packageTitle: '3 Cupons de R$ 10',
-    packageQty: 3,
-    amount: 29.9,
-    status: 'SUCCEEDED',
-    createdAt: '2025-12-03T14:30:00Z',
-  },
-  {
-    id: 2,
-    key: 'b2c3d4e5',
-    userName: 'Joao Santos',
-    packageTitle: '7 Cupons de R$ 10',
-    packageQty: 7,
-    amount: 59.9,
-    status: 'SUCCEEDED',
-    createdAt: '2025-12-03T13:15:00Z',
-  },
-  {
-    id: 3,
-    key: 'c3d4e5f6',
-    userName: 'Ana Costa',
-    packageTitle: '5 Cupons de R$ 15',
-    packageQty: 5,
-    amount: 69.9,
-    status: 'PENDING',
-    createdAt: '2025-12-03T12:00:00Z',
-  },
-  {
-    id: 4,
-    key: 'd4e5f6a7',
-    userName: 'Pedro Oliveira',
-    packageTitle: '10 Cupons de R$ 10',
-    packageQty: 10,
-    amount: 89.9,
-    status: 'SUCCEEDED',
-    createdAt: '2025-12-02T18:45:00Z',
-  },
-  {
-    id: 5,
-    key: 'e5f6a7b8',
-    userName: 'Carla Ferreira',
-    packageTitle: '3 Cupons de R$ 20',
-    packageQty: 3,
-    amount: 54.9,
-    status: 'SUCCEEDED',
-    createdAt: '2025-12-02T16:30:00Z',
-  },
-];
+const REFRESH_INTERVAL = 120000; // 2 minutes
 
 export default function Home() {
   const [data, setData] = useState<MetricsResponse | null>(null);
+  const [dailyHistory, setDailyHistory] = useState<DailyHistoryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -75,6 +22,30 @@ export default function Home() {
   const [testMode, setTestMode] = useState(false);
   const [testValue, setTestValue] = useState<number | null>(null);
   const [testSpending, setTestSpending] = useState<number | null>(null);
+
+  // Sound effect for revenue increase
+  const previousValueRef = useRef<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize audio on client side
+  useEffect(() => {
+    audioRef.current = new Audio('/cash-register.mp3');
+    audioRef.current.volume = 0.5;
+  }, []);
+
+  // Play sound when revenue increases
+  useEffect(() => {
+    if (data && previousValueRef.current !== null) {
+      if (data.combined.totalValue > previousValueRef.current) {
+        audioRef.current?.play().catch(() => {
+          // Ignore autoplay errors
+        });
+      }
+    }
+    if (data) {
+      previousValueRef.current = data.combined.totalValue;
+    }
+  }, [data]);
 
   const fetchMetrics = useCallback(async (showRefreshIndicator = false) => {
     try {
@@ -100,17 +71,32 @@ export default function Home() {
     }
   }, []);
 
+  const fetchDailyHistory = useCallback(async () => {
+    try {
+      const response = await fetch('/api/daily-history', {
+        cache: 'no-store',
+      });
+      if (response.ok) {
+        const result: DailyHistoryResponse = await response.json();
+        setDailyHistory(result);
+      }
+    } catch (error) {
+      console.error('Error fetching daily history:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMetrics();
-  }, [fetchMetrics]);
+    fetchDailyHistory();
+  }, [fetchMetrics, fetchDailyHistory]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchMetrics();
-    }, REFRESH_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, [fetchMetrics]);
+  // Auto-refresh disabled to reduce database load
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     fetchMetrics();
+  //   }, REFRESH_INTERVAL);
+  //   return () => clearInterval(interval);
+  // }, [fetchMetrics]);
 
   if (loading) {
     return (
@@ -285,6 +271,13 @@ export default function Home() {
           couponsUsed={data.usage.couponsUsed}
         />
 
+        {/* Stats Cards */}
+        <StatsCards
+          b2c={data.b2c}
+          b2b={data.b2b}
+          usage={data.usage}
+        />
+
         {/* Progress Stats Section */}
         <div className="flex items-center justify-center gap-8 py-3 px-4 bg-gradient-to-r from-gray-900/50 via-gray-800/50 to-gray-900/50 rounded-xl border border-gray-700/30">
           <div className="text-center">
@@ -312,19 +305,14 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <StatsCards
-          b2c={data.b2c}
-          b2b={data.b2b}
-          usage={data.usage}
-        />
-
-        {/* Transactions Table */}
-        <CouponTable transactions={mockTransactions} />
+        {/* Revenue Chart */}
+        {dailyHistory && dailyHistory.history.length > 0 && (
+          <RevenueChart data={dailyHistory.history} />
+        )}
 
         {/* Footer */}
         <div className="text-center text-gray-600 text-xs py-2">
-          Auto-refresh a cada 30 segundos
+          Clique em Atualizar para recarregar
         </div>
       </div>
     </main>

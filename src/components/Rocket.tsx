@@ -331,7 +331,7 @@ export default function Rocket({ percentage, checkpoint, isAnimating }: RocketPr
             fill="url(#yoogaBlue)"
           />
 
-          {/* Main window - 3D glass effect */}
+          {/* Main window - 3D glass effect with glow */}
           <circle
             cx="50"
             cy="52"
@@ -339,7 +339,36 @@ export default function Rocket({ percentage, checkpoint, isAnimating }: RocketPr
             fill="url(#windowGradient)"
             stroke="#1e40af"
             strokeWidth="2"
-          />
+          >
+            <animate
+              attributeName="stroke"
+              values="#1e40af;#3b82f6;#60a5fa;#3b82f6;#1e40af"
+              dur="2s"
+              repeatCount="indefinite"
+            />
+          </circle>
+          {/* Window outer glow ring */}
+          <circle
+            cx="50"
+            cy="52"
+            r="12"
+            fill="none"
+            stroke="rgba(59,130,246,0.3)"
+            strokeWidth="1"
+          >
+            <animate
+              attributeName="stroke-opacity"
+              values="0.2;0.5;0.2"
+              dur="1.5s"
+              repeatCount="indefinite"
+            />
+            <animate
+              attributeName="r"
+              values="11;13;11"
+              dur="1.5s"
+              repeatCount="indefinite"
+            />
+          </circle>
           {/* Window reflection */}
           <ellipse
             cx="47"
@@ -534,10 +563,31 @@ export default function Rocket({ percentage, checkpoint, isAnimating }: RocketPr
           <ellipse cx="50" cy="162" rx="6" ry="4" fill="#1f2937" stroke="#374151" strokeWidth="1" />
           <ellipse cx="62" cy="160" rx="5" ry="3" fill="#1f2937" stroke="#374151" strokeWidth="1" />
 
-          {/* Engine inner glow */}
-          <ellipse cx="38" cy="160" rx="3" ry="2" fill="#374151" />
-          <ellipse cx="50" cy="162" rx="4" ry="2.5" fill="#374151" />
-          <ellipse cx="62" cy="160" rx="3" ry="2" fill="#374151" />
+          {/* Engine inner glow - animated */}
+          <ellipse cx="38" cy="160" rx="3" ry="2" fill="#374151">
+            <animate
+              attributeName="fill"
+              values={checkpoint >= 3 ? "#1e3a8a;#22d3ee;#1e3a8a" : "#7c2d12;#f97316;#7c2d12"}
+              dur="0.2s"
+              repeatCount="indefinite"
+            />
+          </ellipse>
+          <ellipse cx="50" cy="162" rx="4" ry="2.5" fill="#374151">
+            <animate
+              attributeName="fill"
+              values={checkpoint >= 3 ? "#1e3a8a;#22d3ee;#1e3a8a" : "#7c2d12;#f97316;#7c2d12"}
+              dur="0.15s"
+              repeatCount="indefinite"
+            />
+          </ellipse>
+          <ellipse cx="62" cy="160" rx="3" ry="2" fill="#374151">
+            <animate
+              attributeName="fill"
+              values={checkpoint >= 3 ? "#1e3a8a;#22d3ee;#1e3a8a" : "#7c2d12;#f97316;#7c2d12"}
+              dur="0.2s"
+              repeatCount="indefinite"
+            />
+          </ellipse>
 
           {/* ============ RIVETS & DETAILS ============ */}
 
@@ -556,6 +606,39 @@ export default function Rocket({ percentage, checkpoint, isAnimating }: RocketPr
             <circle key={`rivet-bot-${x}`} cx={x} cy="148" r="1.2" fill="#374151" />
           ))}
         </svg>
+
+        {/* Contrail / Vapor trail behind rocket */}
+        {percentage > 20 && (
+          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 pointer-events-none">
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={`trail-${i}`}
+                className="absolute rounded-full"
+                style={{
+                  width: 4 + i * 2,
+                  height: 4 + i * 2,
+                  left: '50%',
+                  marginLeft: -(2 + i),
+                  backgroundColor: checkpoint >= 3
+                    ? `rgba(34,211,238,${0.3 - i * 0.03})`
+                    : `rgba(251,146,60,${0.25 - i * 0.025})`,
+                  filter: 'blur(2px)',
+                }}
+                animate={{
+                  y: [i * 12, i * 12 + 80],
+                  opacity: [0.4 - i * 0.04, 0],
+                  scale: [1, 2],
+                }}
+                transition={{
+                  duration: 1.5 - checkpoint * 0.2,
+                  delay: i * 0.08,
+                  repeat: Infinity,
+                  ease: 'easeOut',
+                }}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Enhanced Flames - 3 engines */}
         {percentage > 0 && (
@@ -766,6 +849,39 @@ export default function Rocket({ percentage, checkpoint, isAnimating }: RocketPr
                 </div>
               )}
 
+              {/* Engine sparks - all checkpoints */}
+              <div className="absolute top-4 left-1/2 -translate-x-1/2">
+                {[...Array(8 + checkpoint * 4)].map((_, i) => (
+                  <motion.div
+                    key={`spark-${i}`}
+                    className="absolute rounded-full"
+                    style={{
+                      width: 1 + Math.random() * 2,
+                      height: 1 + Math.random() * 2,
+                      left: `${-12 + Math.random() * 24}px`,
+                      backgroundColor: checkpoint >= 3
+                        ? ['#ffffff', '#22d3ee', '#60a5fa'][Math.floor(Math.random() * 3)]
+                        : ['#ffffff', '#fbbf24', '#fb923c'][Math.floor(Math.random() * 3)],
+                      boxShadow: checkpoint >= 3
+                        ? '0 0 4px #22d3ee'
+                        : '0 0 4px #fbbf24',
+                    }}
+                    animate={{
+                      y: [0, 40 + Math.random() * 30],
+                      x: [(Math.random() - 0.5) * 30, (Math.random() - 0.5) * 50],
+                      opacity: [1, 0],
+                      scale: [1, 0],
+                    }}
+                    transition={{
+                      duration: 0.3 + Math.random() * 0.3,
+                      delay: i * 0.04,
+                      repeat: Infinity,
+                      ease: 'easeOut',
+                    }}
+                  />
+                ))}
+              </div>
+
               {/* Supersonic rings at checkpoint 3+ - centered */}
               {checkpoint >= 3 && (
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 flex flex-col items-center">
@@ -871,6 +987,66 @@ export default function Rocket({ percentage, checkpoint, isAnimating }: RocketPr
               repeat: Infinity,
             }}
           />
+        )}
+
+        {/* Heat shimmer effect around rocket at high speeds */}
+        {checkpoint >= 2 && (
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: checkpoint >= 3
+                ? 'radial-gradient(ellipse at center, rgba(34,211,238,0.08) 0%, transparent 50%)'
+                : 'radial-gradient(ellipse at center, rgba(251,146,60,0.06) 0%, transparent 50%)',
+            }}
+            animate={{
+              scale: [1, 1.05, 1],
+              opacity: [0.5, 0.8, 0.5],
+            }}
+            transition={{
+              duration: 0.8,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+        )}
+
+        {/* Atmospheric friction glow at checkpoint 3+ */}
+        {checkpoint >= 3 && (
+          <>
+            <motion.div
+              className="absolute -top-2 left-1/2 -translate-x-1/2 w-full h-8 pointer-events-none rounded-t-full"
+              style={{
+                background: checkpoint >= 4
+                  ? 'linear-gradient(to bottom, rgba(34,211,238,0.4), transparent)'
+                  : 'linear-gradient(to bottom, rgba(251,146,60,0.3), transparent)',
+              }}
+              animate={{
+                opacity: [0.3, 0.6, 0.3],
+              }}
+              transition={{
+                duration: 0.3,
+                repeat: Infinity,
+              }}
+            />
+            {/* Nose cone heating effect */}
+            <motion.div
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-4 pointer-events-none"
+              style={{
+                background: checkpoint >= 4
+                  ? 'radial-gradient(ellipse at bottom, rgba(34,211,238,0.5), transparent)'
+                  : 'radial-gradient(ellipse at bottom, rgba(251,146,60,0.4), transparent)',
+                borderRadius: '50% 50% 0 0',
+              }}
+              animate={{
+                opacity: [0.4, 0.8, 0.4],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 0.2,
+                repeat: Infinity,
+              }}
+            />
+          </>
         )}
       </div>
     </motion.div>
